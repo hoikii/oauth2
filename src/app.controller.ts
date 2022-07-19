@@ -9,8 +9,5 @@ export class AppController {
 
   @Get()
   @Redirect(OAUTH_URL, 302)
-  whoAmI(): string {
-
-    return 'hello!'
-  }
+  whoAmI() {}
 }
