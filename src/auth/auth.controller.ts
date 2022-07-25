@@ -1,24 +1,33 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { AxiosResponse }  from 'axios'
-import { INTRA_URL } from 'src/constants';
+import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from './auth.service';
 
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
-  constructor(private readonly httpService: HttpService) {}
+  constructor (
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  @Get()
-  auth(@Query('code') code: string) {
-    const res = this.httpService.post(INTRA_URL +  '/oauth/token', {
-      grant_type: 'authorization_code',
-      cliend_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      redirect_uri: 'http://localhost:3000/auth',
-      code
-    })
-    res.subscribe((x) => {
-      x.data.
-      console.log(x.status)
-    })
+  @Get('ft')
+  @UseGuards(AuthGuard('ft'))
+  async auth() {}
+
+  @Get('ft/callback')
+  @UseGuards(AuthGuard('ft'))
+  async callback(@Req() req: any) {
+    const { id, name } = req.user
+
+    let uid
+    const user = this.authService.findFtUser(id)
+    if (user) {
+      uid = user.id
+    } else {
+      const { refresh_token, access_token } = req.user
+      this.authService.createFtUser(id, refresh_token, access_token)
+      uid = this.authService.createUser(name)
+    }
+    return this.jwtService.sign( {uid} )
   }
 }
