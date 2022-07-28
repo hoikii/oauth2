@@ -1,28 +1,41 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
 
 type User = {
-  id: number;
-  name: string;
+  id: number
+  name: string
+  refresh_token: string
 }
 
 type FtUser = {
-  id: number;
-  refresh_token: string;
-  access_token: string;
+  id: number
+  refresh_token: string
+  access_token: string
 }
 
 @Injectable()
 export class AuthService {
-  id: number;
-  users: User[];
-  ftUsers: FtUser[];
+  id: number
+  users: User[]
+  ftUsers: FtUser[]
 
-  constructor() {
-    this.id = 0;
+  constructor(private readonly jwtService: JwtService) {
+    this.id = 0
     this.users = []
     this.ftUsers = []
   }
-  
+
+  createAccessToken(uid: number) {
+    return this.jwtService.sign({ uid })
+  }
+
+  createRefreshToken(uid: number) {
+    const token = this.jwtService.sign({ uid }, { expiresIn: '600s' })
+    const user = this.findUser(uid)
+    user.refresh_token = token
+    return token
+  }
+
   findFtUser(id: number) {
     return this.ftUsers.find(user => user.id === id)
   }
@@ -31,7 +44,7 @@ export class AuthService {
     this.ftUsers.push({
       id: id,
       refresh_token: refresh_token,
-      access_token: access_token
+      access_token: access_token,
     })
   }
 
@@ -42,12 +55,21 @@ export class AuthService {
   createUser(username: string): number {
     this.users.push({
       id: this.id,
-      name: username
+      name: username,
+      refresh_token: null,
     })
     this.id++
     return this.users[this.id - 1].id
   }
 
+  findUserIfRefreshTokenMatches(uid: number, token: string) {
+    const user = this.users.find(user => user.id === uid)
+    const isRefreshTokenMatching = token === user.refresh_token
+    if (isRefreshTokenMatching) {
+      return user
+    }
+    return
+  }
 }
 
 // import { Injectable } from '@nestjs/common';
@@ -65,7 +87,7 @@ export class AuthService {
 //     private userRepository: Repository<User>,
 //     private jwtService: JwtService
 //   ) {}
-  
+
 //   async login(access_token: string, refresh_token: string, profile: any) {
 //     const ident = await this.ftOauthRepository.findOneBy({ id: profile.id as number })
 

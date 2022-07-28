@@ -3,17 +3,17 @@ import { AuthController } from './auth.controller'
 import { FtStrategy } from './ft.strategy'
 import { AuthService } from './auth.service'
 import { JwtModule } from '@nestjs/jwt'
+import { JwtRefreshStrategy } from 'src/jwt_refresh.strategy'
 
 @Module({
   imports: [
     JwtModule.register({
       secret: 'secret',
-      signOptions: { expiresIn: '600s' },
-    })
+      signOptions: { expiresIn: '120s' },
+    }),
   ],
   controllers: [AuthController],
-  providers: [FtStrategy, AuthService],
+  providers: [FtStrategy, AuthService, JwtRefreshStrategy],
   exports: [AuthService],
 })
-
 export class AuthModule {}

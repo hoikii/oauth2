@@ -1,6 +1,7 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, UseGuards, Req, Post } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
+import { JwtRefreshGuard } from 'src/jwt_refresh.guard'
 import { AuthService } from './auth.service';
 
 @Controller('api/auth')
@@ -28,6 +29,21 @@ export class AuthController {
       this.authService.createFtUser(id, refresh_token, access_token)
       uid = this.authService.createUser(name)
     }
-    return this.jwtService.sign( {uid} )
+    const access = this.authService.createAccessToken(uid)
+    const refresh = this.authService.createRefreshToken(uid)
+    return {
+      access_token: access,
+      refresh_token: refresh,
+    }
+  }
+
+  @Post('refresh')
+  @UseGuards(JwtRefreshGuard)
+  async refresh(@Req() req: any) {
+    const uid = req.user.id
+    // const uid = this.authService.findUserByRefreshToken(req).id
+    return {
+      access_token: this.authService.createAccessToken(uid),
+    }
   }
 }

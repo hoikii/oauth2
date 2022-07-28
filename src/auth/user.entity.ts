@@ -1,10 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
-  uid: number;
+  uid: number
 
   @Column()
-  nickname: string;
+  nickname: string
+
+  @Column({ nullable: true })
+  RefreshToken: string
 }
